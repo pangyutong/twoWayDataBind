@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>双向数据绑定</title>
+    </head>
+    <body>
+        <div>
+            <input id="target" type="text" />
+            <span id="content"></span>
+        </div>
+        <script>
+            var target = document.getElementById('target')
+            var content = document.getElementById('content')
+            var obj = {}
+            Object.defineProperty(obj, 'hello', {
+                set: function (newVal) {
+                    target.value = newVal
+                    content.innerHTML = newVal
+                }
+            })
+            document.addEventListener('keyup', function (e) {
+                obj.hello = e.target.value
+            })
+        </script>
+    </body>
+</html>
