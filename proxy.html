@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>vue3.0.0怎么跑的</title>
+    </head>
+    <body>
+        <div id="app">
+            <button id="btn">click</button>
+            <div id="list"></div>
+        </div>
+        <script>
+          const list = document.getElementById('list');
+          const btn = document.getElementById('btn');
+
+          // 渲染列表
+          const Render = {
+            // 初始化
+            init: function(arr) {
+              const fragment = document.createDocumentFragment();
+              for (let i = 0; i < arr.length; i++) {
+                const li = document.createElement('li');
+                li.textContent = arr[i];
+                fragment.appendChild(li);
+              }
+              list.appendChild(fragment);
+            },
+            // 我们只考虑了增加的情况,仅作为示例
+            change: function(val) {
+              const li = document.createElement('li');
+              li.textContent = val;
+              list.appendChild(li);
+            },
+          };
+
+          // 初始数组
+          const arr = [1, 2, 3, 4];
+
+          // 监听数组
+          const newArr = new Proxy(arr, {
+            get: function(target, key, receiver) {
+              console.log(key);
+              return Reflect.get(target, key, receiver);
+            },
+            set: function(target, key, value, receiver) {
+              console.log(target, key, value, receiver);
+              if (key !== 'length') {
+                Render.change(value);
+              }
+              return Reflect.set(target, key, value, receiver);
+            },
+          });
+
+          // 初始化
+          window.onload = function() {
+              Render.init(arr);
+          }
+
+          // push数字
+          btn.addEventListener('click', function() {
+            newArr.push(6);
+          });
+
+          const aryMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
+          const arrayAugmentations = [];
+
+          aryMethods.forEach((method)=> {
+
+              // 这里是原生Array的原型方法
+              let original = Array.prototype[method];
+
+             // 将push, pop等封装好的方法定义在对象arrayAugmentations的属性上
+             // 注意：是属性而非原型属性
+              arrayAugmentations[method] = function () {
+                  console.log('我被改变啦!');
+
+                  // 调用对应的原生方法并返回结果
+                  return original.apply(this, arguments);
+              };
+
+          });
+
+          let list = ['a', 'b', 'c'];
+          // 将我们要监听的数组的原型指针指向上面定义的空数组对象
+          // 别忘了这个空数组的属性上定义了我们封装好的push等方法
+          list.__proto__ = arrayAugmentations;
+          list.push('d');  // 我被改变啦！ 4
+
+          // 这里的list2没有被重新定义原型指针，所以就正常输出
+          let list2 = ['a', 'b', 'c'];
+          list2.push('d');  // 4
+
+        </script>
+    </body>
+</html>
